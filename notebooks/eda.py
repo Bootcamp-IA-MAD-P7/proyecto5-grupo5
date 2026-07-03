@@ -11,7 +11,7 @@ import sweetviz as sv
 # ## Configuration
 
 # %%
-DATASET_PATH = Path("../data/raw/example.csv")
+DATASET_PATH = Path("../data/raw/Telco_customer_churn.xlsx")
 REPORTS_DIR = Path("../reports")
 REPORT_PATH = REPORTS_DIR / "eda_report.html"
 
@@ -19,10 +19,17 @@ REPORT_PATH = REPORTS_DIR / "eda_report.html"
 # ## Load dataset
 
 # %%
-df = pd.read_csv(DATASET_PATH)
+df = pd.read_excel(DATASET_PATH)
 
 df.head()
+# %%
+df["Total Charges"] = pd.to_numeric(
+    df["Total Charges"],
+    errors="coerce",
+)
 
+df["Total Charges"].isna().sum()
+df = df.dropna(subset=["Total Charges"])
 # %% [markdown]
 # ## Generate report
 
