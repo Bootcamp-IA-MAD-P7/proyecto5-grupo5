@@ -9,8 +9,8 @@ NOTEBOOK_DIR := notebooks
 TARGET ?=
 
 ifeq ($(TARGET),)
-PY_NOTEBOOKS := $(NOTEBOOK_DIR)/*.py
-IPYNB_NOTEBOOKS := $(NOTEBOOK_DIR)/*.ipynb
+PY_NOTEBOOKS := $(wildcard $(NOTEBOOK_DIR)/*.py)
+IPYNB_NOTEBOOKS := $(patsubst %.py,%.ipynb,$(PY_NOTEBOOKS))
 else
 PY_NOTEBOOKS := $(TARGET)
 IPYNB_NOTEBOOKS := $(patsubst %.py,%.ipynb,$(TARGET))
@@ -18,10 +18,10 @@ endif
 
 .PHONY: sync check format run clean notebook
 
-# Synchronize .py and .ipynb notebooks using Jupytext.
-sync:
-	@echo "Syncing notebooks..."
-	jupytext --sync $(PY_NOTEBOOKS)
+# Format notebook source files without applying fixes.
+format:
+	@echo "Formatting notebooks..."
+	ruff format $(PY_NOTEBOOKS)
 	@echo "Done."
 
 # Apply Ruff fixes and format the notebook source files.
@@ -29,12 +29,12 @@ check:
 	@echo "Checking and fixing notebooks..."
 	ruff check --fix $(PY_NOTEBOOKS)
 	ruff format $(PY_NOTEBOOKS)
-	@echo "Done."
+	@echo "Done."                           
 
-# Format notebook source files without applying fixes.
-format:
-	@echo "Formatting notebooks..."
-	ruff format $(PY_NOTEBOOKS)
+# Synchronize .py and .ipynb notebooks using Jupytext.
+sync:
+	@echo "Syncing notebooks..."
+	jupytext --sync $(PY_NOTEBOOKS)
 	@echo "Done."
 
 # Execute notebooks in place, preserving generated outputs.
@@ -49,6 +49,6 @@ clean:
 	nbstripout --keep-output $(IPYNB_NOTEBOOKS)
 	@echo "Done."
 
-# Full notebook pipeline: sync, lint, execute and clean.
-notebook: sync check run clean
+# Full notebook pipeline: lint, sync, execute and clean.
+notebook: check sync run clean
 	@echo "Notebook pipeline completed successfully."
