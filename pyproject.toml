@@ -21,6 +21,13 @@ dependencies = [
     "joblib>=1.5.3",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+namespaces = false
+
+[tool.setuptools.package-dir]
+"" = "."
+
 [dependency-groups]
 dev = [
     "nbstripout>=0.9.1",
