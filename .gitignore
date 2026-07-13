@@ -209,6 +209,7 @@ tempCodeRunnerFile.py
 
 # Trained models (reproducible from notebooks)
 /models/*.pkl
+/models/*.joblib
 
 # Ruff stuff:
 .ruff_cache/
