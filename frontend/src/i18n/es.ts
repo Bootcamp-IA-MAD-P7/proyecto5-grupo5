@@ -1,0 +1,67 @@
+import type { Translations } from './types'
+
+export const es: Translations = {
+  page: {
+    title: 'Predicción de Abandono',
+    description: 'Complete los datos del cliente para predecir la probabilidad de abandono.',
+  },
+  buttons: {
+    predict: 'Predecir Abandono',
+    predicting: 'Prediciendo...',
+    home: 'Inicio',
+    themeLight: 'Claro',
+    themeDark: 'Oscuro',
+    langEs: 'ES',
+    langEn: 'EN',
+  },
+  groups: {
+    'personal-info': 'Información Personal',
+    'account-info': 'Información de Cuenta',
+    'services': 'Servicios',
+    'contract-billing': 'Contrato y Facturación',
+  },
+  fields: {
+    Gender: { label: 'Género', options: { Male: 'Masculino', Female: 'Femenino' } },
+    'Senior Citizen': { label: 'Adulto Mayor', options: { '0': 'No', '1': 'Sí' } },
+    Partner: { label: 'Pareja', options: { No: 'No', Yes: 'Sí' } },
+    Dependents: { label: 'Dependientes', options: { No: 'No', Yes: 'Sí' } },
+    'Tenure Months': { label: 'Meses de Permanencia' },
+    'Phone Service': { label: 'Servicio Telefónico', options: { No: 'No', Yes: 'Sí' } },
+    'Multiple Lines': { label: 'Múltiples Líneas', options: { No: 'No', Yes: 'Sí' } },
+    'Internet Service': { label: 'Servicio de Internet', options: { DSL: 'DSL', 'Fiber optic': 'Fibra óptica', No: 'No' } },
+    'Online Security': { label: 'Seguridad en Línea', options: { No: 'No', Yes: 'Sí' } },
+    'Online Backup': { label: 'Respaldo en Línea', options: { No: 'No', Yes: 'Sí' } },
+    'Device Protection': { label: 'Protección de Dispositivos', options: { No: 'No', Yes: 'Sí' } },
+    'Tech Support': { label: 'Soporte Técnico', options: { No: 'No', Yes: 'Sí' } },
+    'Streaming TV': { label: 'TV en Streaming', options: { No: 'No', Yes: 'Sí' } },
+    'Streaming Movies': { label: 'Películas en Streaming', options: { No: 'No', Yes: 'Sí' } },
+    Contract: { label: 'Contrato', options: { 'Month-to-month': 'Mensual', 'One year': 'Anual', 'Two year': 'Bienal' } },
+    'Paperless Billing': { label: 'Facturación Electrónica', options: { No: 'No', Yes: 'Sí' } },
+    'Payment Method': {
+      label: 'Método de Pago',
+      options: {
+        'Electronic check': 'Cheque Electrónico',
+        'Mailed check': 'Cheque Postal',
+        'Bank transfer (automatic)': 'Transferencia Bancaria',
+        'Credit card (automatic)': 'Tarjeta de Crédito',
+      },
+    },
+    'Monthly Charges': { label: 'Cargos Mensuales' },
+    'Total Charges': { label: 'Cargos Totales' },
+  },
+  result: {
+    title: 'Resultado de la Predicción',
+    sentence: { start: 'El cliente ', end: ' abandonará la empresa' },
+    probability: 'Probabilidad:',
+    risk: '',
+    riskLabels: {
+      low: 'Riesgo bajo',
+      medium: 'Riesgo medio',
+      high: 'Riesgo alto',
+    },
+    yes: 'sí',
+    no: 'no',
+  },
+  error: 'Error:',
+  placeholder: 'Seleccionar...',
+}
