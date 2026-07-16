@@ -2,12 +2,13 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder, StandardScaler
-from xgboost import XGBClassifier
 
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+
+from xgboost import XGBClassifier
 
 from src.config import (
     BINARY_COLS,
@@ -25,9 +26,7 @@ def _encode_binary(df):
     for col in BINARY_COLS:
         if col in df.columns:
             unique_vals = set(df[col].unique())
-            mapping = {
-                k: v for k, v in BINARY_ENCODING_MAP.items() if k in unique_vals
-            }
+            mapping = {k: v for k, v in BINARY_ENCODING_MAP.items() if k in unique_vals}
             df[col] = df[col].map(mapping).astype(int)
     return df
 
@@ -41,14 +40,12 @@ def _build_all_transforms() -> ColumnTransformer:
     ordinal_categories = list(ORDINAL_ENCODINGS.values())
 
     transformers = []
+
     if ordinal_cols:
         transformers.append(
-            (
-                "ordinal",
-                OrdinalEncoder(categories=ordinal_categories, dtype=int),
-                ordinal_cols,
-            )
+            ("ordinal", OrdinalEncoder(categories=ordinal_categories, dtype=int), ordinal_cols)
         )
+
     if NOMINAL_COLS:
         transformers.append(
             (
@@ -62,44 +59,49 @@ def _build_all_transforms() -> ColumnTransformer:
                 NOMINAL_COLS,
             )
         )
+
     if NUMERIC_SCALE_COLS:
-        transformers.append(
-            ("scaler", StandardScaler(), [c for c in NUMERIC_SCALE_COLS])
-        )
+        transformers.append(("scaler", StandardScaler(), [c for c in NUMERIC_SCALE_COLS]))
 
     return ColumnTransformer(transformers=transformers, remainder="passthrough")
 
 
-def _build_preprocess_pipeline() -> Pipeline:
+def _has_steps(obj) -> bool:
+    # cubre sklearn Pipeline / imblearn Pipeline y cualquier wrapper similar
+    return hasattr(obj, "steps") and isinstance(getattr(obj, "steps"), list)
+
+
+def _flatten_into_steps(transformer, prefix: str):
     """
-    Preprocesamiento SOLO (sin SMOTE).
-    ImbPipeline se encargará de SMOTE después.
+    Devuelve una lista de (nombre, paso) para insertar directo en el ImbPipeline final.
+    Si 'transformer' es un Pipeline (sklearn o imblearn), lo expande recursivamente.
     """
-    return Pipeline(
-        [
-            ("features", create_feature_transformer()),
-            ("binary", _make_binary_encoder()),
-            ("transform", _build_all_transforms()),
-        ]
-    )
+    if _has_steps(transformer):
+        out = []
+        for name, step in transformer.steps:
+            new_prefix = f"{prefix}__{name}"
+            out.extend(_flatten_into_steps(step, new_prefix))
+        return out
+
+    # No es pipeline: lo insertamos como un solo paso
+    return [(prefix, transformer)]
 
 
 def _build_model_pipeline_with_smote(model_step, random_state=RANDOM_STATE) -> ImbPipeline:
-    """
-    Pipeline final: preprocess -> SMOTE (en el train) -> clasificador.
-    Esto evita leakage y hace que el test quede sin tocar.
-    """
-    return ImbPipeline(
-        steps=[
-            ("preprocess", _build_preprocess_pipeline()),
-            ("smote", SMOTE(random_state=random_state, k_neighbors=5)),
-            ("clf", model_step),
-        ]
-    )
+    ft = create_feature_transformer()  # puede ser Pipeline o no
+    ft_steps = _flatten_into_steps(ft, prefix="features")
+
+    steps = []
+    steps.extend(ft_steps)
+    steps.append(("binary", _make_binary_encoder()))
+    steps.append(("transform", _build_all_transforms()))
+    steps.append(("smote", SMOTE(random_state=random_state, k_neighbors=5)))
+    steps.append(("clf", model_step))
+
+    return ImbPipeline(steps=steps)
 
 
 def build_logistic_pipeline(**kwargs) -> ImbPipeline:
-    # Con SMOTE normalmente NO necesitas class_weight="balanced"
     params = {
         "class_weight": None,
         "max_iter": 1000,

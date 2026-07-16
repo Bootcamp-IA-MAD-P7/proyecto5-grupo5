@@ -1,3 +1,4 @@
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -29,30 +30,16 @@ def make_train_test_split(df: pd.DataFrame):
     return X_train, X_test, y_train, y_test
 
 
-def evaluate_models(models, X_test, y_test):
-    rows = []
-    for name, pipeline in models:
-        y_pred = pipeline.predict(X_test)
+def evaluate_model(name, y_true, y_pred, y_score):
+    return {
+        "Model": name,
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Precision": precision_score(y_true, y_pred, average="macro", zero_division=0),
+        "Recall": recall_score(y_true, y_pred, average="macro", zero_division=0),
+        "F1": f1_score(y_true, y_pred, average="macro", zero_division=0),
+        "ROC-AUC": roc_auc_score(y_true, y_score) if y_score is not None else np.nan,
+    }
 
-        # ROC-AUC requiere proba o scores
-        if hasattr(pipeline, "predict_proba"):
-            y_score = pipeline.predict_proba(X_test)[:, 1]
-        else:
-            y_score = None
-
-        rows.append(
-            evaluate_model(
-                name,
-                y_test,
-                y_pred,
-                y_score,
-            )
-        )
-
-    results = compare_models(rows)
-    print("=== Model Comparison ===")
-    print(results.to_string())
-    return results
 
 
 def run_optuna_study(

@@ -8,6 +8,8 @@
 # %%
 
 import sys
+from src.training import make_train_test_split, evaluate_models, run_optuna_study
+
 from pathlib import Path
 
 root = Path.cwd()
@@ -23,11 +25,6 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
 from src.config import OPTUNA_TRIALS
 from src.data import load_clean_data
-from src.training import (
-    make_train_test_split,
-    evaluate_models,
-    run_optuna_study,
-)
 from src.pipelines import build_knn_pipeline
 from src.utils import save_pipeline, load_pipeline
 

@@ -1,4 +1,12 @@
 # %%
+import sys
+print(sys.executable)
+print(sys.version)
+
+# %%
+from imblearn.over_sampling import SMOTE
+print("SMOTE OK")
+
 # %% [markdown]
 # # Exploratory Data Analysis
 
