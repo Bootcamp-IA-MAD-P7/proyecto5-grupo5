@@ -5,6 +5,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder, StandardScaler
 from xgboost import XGBClassifier
+
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
+
 from src.config import (
     BINARY_COLS,
     BINARY_ENCODING_MAP,
@@ -50,7 +54,10 @@ def _build_all_transforms() -> ColumnTransformer:
             (
                 "nominal",
                 OneHotEncoder(
-                    drop="first", handle_unknown="ignore", sparse_output=False, dtype=int
+                    drop="first",
+                    handle_unknown="ignore",
+                    sparse_output=False,
+                    dtype=int,
                 ),
                 NOMINAL_COLS,
             )
@@ -63,48 +70,68 @@ def _build_all_transforms() -> ColumnTransformer:
     return ColumnTransformer(transformers=transformers, remainder="passthrough")
 
 
-def _build_model_pipeline(model_step) -> Pipeline:
+def _build_preprocess_pipeline() -> Pipeline:
+    """
+    Preprocesamiento SOLO (sin SMOTE).
+    ImbPipeline se encargará de SMOTE después.
+    """
     return Pipeline(
         [
             ("features", create_feature_transformer()),
             ("binary", _make_binary_encoder()),
             ("transform", _build_all_transforms()),
+        ]
+    )
+
+
+def _build_model_pipeline_with_smote(model_step, random_state=RANDOM_STATE) -> ImbPipeline:
+    """
+    Pipeline final: preprocess -> SMOTE (en el train) -> clasificador.
+    Esto evita leakage y hace que el test quede sin tocar.
+    """
+    return ImbPipeline(
+        steps=[
+            ("preprocess", _build_preprocess_pipeline()),
+            ("smote", SMOTE(random_state=random_state, k_neighbors=5)),
             ("clf", model_step),
         ]
     )
 
 
-def build_logistic_pipeline(**kwargs) -> Pipeline:
+def build_logistic_pipeline(**kwargs) -> ImbPipeline:
+    # Con SMOTE normalmente NO necesitas class_weight="balanced"
     params = {
-        "class_weight": "balanced",
+        "class_weight": None,
         "max_iter": 1000,
         "random_state": RANDOM_STATE,
         **kwargs,
     }
-    return _build_model_pipeline(LogisticRegression(**params))
+    model = LogisticRegression(**params)
+    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
 
 
-def build_knn_pipeline(**kwargs) -> Pipeline:
+def build_knn_pipeline(**kwargs) -> ImbPipeline:
     params = {"n_jobs": -1, **kwargs}
-    return _build_model_pipeline(KNeighborsClassifier(**params))
+    model = KNeighborsClassifier(**params)
+    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
 
 
-def build_random_forest_pipeline(**kwargs) -> Pipeline:
+def build_random_forest_pipeline(**kwargs) -> ImbPipeline:
     params = {
-        "class_weight": "balanced",
+        "class_weight": None,
         "random_state": RANDOM_STATE,
         "n_jobs": -1,
         **kwargs,
     }
-    return _build_model_pipeline(RandomForestClassifier(**params))
+    model = RandomForestClassifier(**params)
+    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
 
 
-def build_xgboost_pipeline(**kwargs) -> Pipeline:
+def build_xgboost_pipeline(**kwargs) -> ImbPipeline:
     params = {
         "eval_metric": "logloss",
         "random_state": RANDOM_STATE,
         **kwargs,
     }
-    return _build_model_pipeline(XGBClassifier(**params))
-
-
+    model = XGBClassifier(**params)
+    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)

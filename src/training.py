@@ -30,17 +30,26 @@ def make_train_test_split(df: pd.DataFrame):
 
 
 def evaluate_models(models, X_test, y_test):
-    results = compare_models(
-        [
+    rows = []
+    for name, pipeline in models:
+        y_pred = pipeline.predict(X_test)
+
+        # ROC-AUC requiere proba o scores
+        if hasattr(pipeline, "predict_proba"):
+            y_score = pipeline.predict_proba(X_test)[:, 1]
+        else:
+            y_score = None
+
+        rows.append(
             evaluate_model(
                 name,
                 y_test,
-                pipeline.predict(X_test),
-                pipeline.predict_proba(X_test)[:, 1],
+                y_pred,
+                y_score,
             )
-            for name, pipeline in models
-        ]
-    )
+        )
+
+    results = compare_models(rows)
     print("=== Model Comparison ===")
     print(results.to_string())
     return results
@@ -66,16 +75,24 @@ def run_optuna_study(
 
     def objective(trial):
         params = suggest_params_fn(trial)
-        pipeline = build_pipeline_fn(**params)
+
         aucs, gaps = [], []
         for tr_idx, va_idx in cv.split(X_train, y_train):
+            # split del fold
             Xa, Xv = X_train.iloc[tr_idx], X_train.iloc[va_idx]
             ya, yv = y_train.iloc[tr_idx], y_train.iloc[va_idx]
+
+            # IMPORTANTE: recrear el pipeline por fold (evita estado compartido)
+            pipeline = build_pipeline_fn(**params)
+
             pipeline.fit(Xa, ya)
+
             val_auc = roc_auc_score(yv, pipeline.predict_proba(Xv)[:, 1])
             train_auc = roc_auc_score(ya, pipeline.predict_proba(Xa)[:, 1])
+
             aucs.append(val_auc)
             gaps.append(train_auc - val_auc)
+
         penalty = max(0, np.mean(gaps) - overfit_threshold) * 2
         return np.mean(aucs) - penalty
 
@@ -85,13 +102,16 @@ def run_optuna_study(
 
     best_trial_params = study.best_params
     mapped_params = suggest_params_fn(FixedTrial(best_trial_params))
+
     raw_aucs = []
     for tr_idx, va_idx in cv.split(X_train, y_train):
         Xa, Xv = X_train.iloc[tr_idx], X_train.iloc[va_idx]
         ya, yv = y_train.iloc[tr_idx], y_train.iloc[va_idx]
+
         pipe = build_pipeline_fn(**mapped_params)
         pipe.fit(Xa, ya)
         raw_aucs.append(roc_auc_score(yv, pipe.predict_proba(Xv)[:, 1]))
+
     raw_cv_auc = np.mean(raw_aucs)
 
     print(f"\nBest trial value (penalized): {study.best_value:.4f}")
