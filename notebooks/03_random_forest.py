@@ -33,6 +33,7 @@ from src.utils import save_pipeline, load_pipeline
 
 sns.set_theme(style="whitegrid")
 
+
 # %%
 df = load_clean_data()
 print(f"Loaded dataset: {df.shape}")

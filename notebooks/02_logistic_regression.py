@@ -1,4 +1,8 @@
 # %%
+import sys
+print(sys.executable)
+# %%
+
 # %% [markdown]
 # # Logistic Regression
 

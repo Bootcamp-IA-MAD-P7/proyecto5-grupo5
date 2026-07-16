@@ -3,6 +3,9 @@
 # # Exploratory Data Analysis
 
 # %% [markdown]
+#
+
+# %% [markdown]
 # ## 1. Configuration
 
 # %%

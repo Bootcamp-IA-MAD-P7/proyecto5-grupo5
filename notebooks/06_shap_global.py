@@ -1,7 +1,6 @@
 # %%
 import sys
 import inspect
-from src.shap_utils import compute_tree_shap_values
 
 from pathlib import Path
 
