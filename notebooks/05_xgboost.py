@@ -6,6 +6,16 @@
 # ## 1. Load clean dataset
 
 # %%
+
+import sys
+from pathlib import Path
+
+root = Path.cwd()
+if not (root / "src").exists():
+    root = root.parent
+
+sys.path.insert(0, str(root))
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 

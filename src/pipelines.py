@@ -5,7 +5,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder, StandardScaler
 from xgboost import XGBClassifier
-
 from src.config import (
     BINARY_COLS,
     BINARY_ENCODING_MAP,

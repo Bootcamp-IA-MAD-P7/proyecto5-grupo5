@@ -6,12 +6,23 @@
 # ## 1. Load clean dataset
 
 # %%
+
+import sys
+from pathlib import Path
+
+root = Path.cwd()
+if not (root / "src").exists():
+    root = root.parent
+
+sys.path.insert(0, str(root))
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
 from src.config import OPTUNA_TRIALS
+
 from src.data import load_clean_data
 from src.training import make_train_test_split, evaluate_models, run_optuna_study
 from src.pipelines import build_logistic_pipeline
