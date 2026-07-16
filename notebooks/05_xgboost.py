@@ -1,4 +1,3 @@
-# %%
 # %% [markdown]
 # # XGBoost
 
@@ -8,6 +7,8 @@
 # %%
 
 import sys
+from src.training import make_train_test_split, evaluate_models, run_optuna_study
+
 from pathlib import Path
 
 root = Path.cwd()
@@ -22,11 +23,6 @@ import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
 from src.data import load_clean_data
-from src.training import (
-    make_train_test_split,
-    evaluate_models,
-    run_optuna_study,
-)
 from src.pipelines import build_xgboost_pipeline
 from src.utils import save_pipeline, load_pipeline
 
@@ -35,6 +31,45 @@ import warnings
 warnings.filterwarnings("ignore")
 
 sns.set_theme(style="whitegrid")
+
+from imblearn.over_sampling import SMOTE
+from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
+
+def build_pipeline_xgboost(
+    n_estimators=300,
+    learning_rate=0.05,
+    max_depth=4,
+    subsample=0.9,
+    colsample_bytree=0.9,
+    reg_lambda=1.0,
+    k_neighbors_smote=5,
+    random_state=42,
+    sampling_strategy="auto"
+):
+    smote = SMOTE(
+        k_neighbors=k_neighbors_smote,
+        random_state=random_state,
+        sampling_strategy=sampling_strategy
+    )
+
+    model = XGBClassifier(
+        n_estimators=n_estimators,
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        subsample=subsample,
+        colsample_bytree=colsample_bytree,
+        reg_lambda=reg_lambda,
+        random_state=random_state,
+        eval_metric="logloss",
+        n_jobs=-1
+    )
+
+    return Pipeline([
+        ("smote", smote),
+        ("model", model),
+    ])
+
 
 # %%
 df = load_clean_data()
@@ -64,20 +99,9 @@ def suggest_xgb_params(trial):
         "reg_lambda": trial.suggest_float("reg_lambda", 1e-3, 10, log=True),
         "gamma": trial.suggest_float("gamma", 0, 5),
         "scale_pos_weight": pos_weight,
+        "k_neighbors_smote": trial.suggest_int("k_neighbors_smote", 3, 10),
     }
 
-
-print("Starting Optuna hyperparameter optimization for XGBoost...")
-study_xgb, xgb_pipeline = run_optuna_study(
-    build_pipeline_fn=build_xgboost_pipeline,
-    suggest_params_fn=suggest_xgb_params,
-    X_train=X_train,
-    y_train=y_train,
-    n_trials=40,
-)
-
-y_pred_xgb = xgb_pipeline.predict(X_test)
-y_proba_xgb = xgb_pipeline.predict_proba(X_test)[:, 1]
 
 # %% [markdown]
 # ## 3. Evaluation

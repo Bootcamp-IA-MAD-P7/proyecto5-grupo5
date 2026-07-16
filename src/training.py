@@ -1,3 +1,4 @@
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -29,21 +30,16 @@ def make_train_test_split(df: pd.DataFrame):
     return X_train, X_test, y_train, y_test
 
 
-def evaluate_models(models, X_test, y_test):
-    results = compare_models(
-        [
-            evaluate_model(
-                name,
-                y_test,
-                pipeline.predict(X_test),
-                pipeline.predict_proba(X_test)[:, 1],
-            )
-            for name, pipeline in models
-        ]
-    )
-    print("=== Model Comparison ===")
-    print(results.to_string())
-    return results
+def evaluate_model(name, y_true, y_pred, y_score):
+    return {
+        "Model": name,
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Precision": precision_score(y_true, y_pred, average="macro", zero_division=0),
+        "Recall": recall_score(y_true, y_pred, average="macro", zero_division=0),
+        "F1": f1_score(y_true, y_pred, average="macro", zero_division=0),
+        "ROC-AUC": roc_auc_score(y_true, y_score) if y_score is not None else np.nan,
+    }
+
 
 
 def run_optuna_study(
@@ -66,16 +62,24 @@ def run_optuna_study(
 
     def objective(trial):
         params = suggest_params_fn(trial)
-        pipeline = build_pipeline_fn(**params)
+
         aucs, gaps = [], []
         for tr_idx, va_idx in cv.split(X_train, y_train):
+            # split del fold
             Xa, Xv = X_train.iloc[tr_idx], X_train.iloc[va_idx]
             ya, yv = y_train.iloc[tr_idx], y_train.iloc[va_idx]
+
+            # IMPORTANTE: recrear el pipeline por fold (evita estado compartido)
+            pipeline = build_pipeline_fn(**params)
+
             pipeline.fit(Xa, ya)
+
             val_auc = roc_auc_score(yv, pipeline.predict_proba(Xv)[:, 1])
             train_auc = roc_auc_score(ya, pipeline.predict_proba(Xa)[:, 1])
+
             aucs.append(val_auc)
             gaps.append(train_auc - val_auc)
+
         penalty = max(0, np.mean(gaps) - overfit_threshold) * 2
         return np.mean(aucs) - penalty
 
@@ -85,13 +89,16 @@ def run_optuna_study(
 
     best_trial_params = study.best_params
     mapped_params = suggest_params_fn(FixedTrial(best_trial_params))
+
     raw_aucs = []
     for tr_idx, va_idx in cv.split(X_train, y_train):
         Xa, Xv = X_train.iloc[tr_idx], X_train.iloc[va_idx]
         ya, yv = y_train.iloc[tr_idx], y_train.iloc[va_idx]
+
         pipe = build_pipeline_fn(**mapped_params)
         pipe.fit(Xa, ya)
         raw_aucs.append(roc_auc_score(yv, pipe.predict_proba(Xv)[:, 1]))
+
     raw_cv_auc = np.mean(raw_aucs)
 
     print(f"\nBest trial value (penalized): {study.best_value:.4f}")

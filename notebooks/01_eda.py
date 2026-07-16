@@ -1,6 +1,17 @@
 # %%
+import sys
+
+print(sys.executable)
+print(sys.version)
+
+# %%
+print("SMOTE OK")
+
 # %% [markdown]
 # # Exploratory Data Analysis
+
+# %% [markdown]
+#
 
 # %% [markdown]
 # ## 1. Configuration

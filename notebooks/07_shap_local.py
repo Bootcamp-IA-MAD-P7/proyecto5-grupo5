@@ -28,4 +28,3 @@ print(results)
 
 # %%
 print("Revisa la carpeta: shap/shap/outputs/ para ver el gráfico local.")
-

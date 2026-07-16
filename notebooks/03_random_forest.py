@@ -8,6 +8,8 @@
 # %%
 
 import sys
+from src.training import make_train_test_split, evaluate_models, run_optuna_study
+
 from pathlib import Path
 
 root = Path.cwd()
@@ -23,15 +25,44 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
 from src.config import OPTUNA_TRIALS
 from src.data import load_clean_data
-from src.training import (
-    make_train_test_split,
-    evaluate_models,
-    run_optuna_study,
-)
 from src.pipelines import build_random_forest_pipeline
 from src.utils import save_pipeline, load_pipeline
 
 sns.set_theme(style="whitegrid")
+
+from imblearn.over_sampling import SMOTE
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+
+def build_pipeline_random_forest(
+    n_estimators=300,
+    max_depth=None,
+    min_samples_split=2,
+    min_samples_leaf=1,
+    k_neighbors_smote=5,
+    random_state=42,
+    sampling_strategy="auto"
+):
+    smote = SMOTE(
+        k_neighbors=k_neighbors_smote,
+        random_state=random_state,
+        sampling_strategy=sampling_strategy
+    )
+
+    model = RandomForestClassifier(
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        min_samples_split=min_samples_split,
+        min_samples_leaf=min_samples_leaf,
+        random_state=random_state,
+        n_jobs=-1
+    )
+
+    return Pipeline([
+        ("smote", smote),
+        ("model", model),
+    ])
+
 
 # %%
 df = load_clean_data()
@@ -52,20 +83,9 @@ def suggest_rf_params(trial):
         "min_samples_split": trial.suggest_int("min_samples_split", 2, 10),
         "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 4),
         "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
+        "k_neighbors_smote": trial.suggest_int("k_neighbors_smote", 3, 10),
     }
 
-
-print("Starting Optuna hyperparameter optimization for Random Forest...")
-study_rf, rf_best = run_optuna_study(
-    build_pipeline_fn=build_random_forest_pipeline,
-    suggest_params_fn=suggest_rf_params,
-    X_train=X_train,
-    y_train=y_train,
-    n_trials=OPTUNA_TRIALS,
-)
-
-y_pred_rf = rf_best.predict(X_test)
-y_proba_rf = rf_best.predict_proba(X_test)[:, 1]
 
 # %% [markdown]
 # ## 3. Evaluation
