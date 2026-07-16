@@ -19,6 +19,16 @@ dependencies = [
     "xgboost>=3.3.0",
     "optuna>=4.9.0",
     "joblib>=1.5.3",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.0",
+    "psycopg2-binary>=2.9",
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning",
 ]
 
 [tool.setuptools.packages.find]
