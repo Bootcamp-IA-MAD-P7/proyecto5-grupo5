@@ -16,6 +16,10 @@ PY_NOTEBOOKS := $(TARGET)
 IPYNB_NOTEBOOKS := $(patsubst %.py,%.ipynb,$(TARGET))
 endif
 
+# Kernel to use when executing notebooks
+# Cambia esto si tu kernel en Jupyter tiene otro nombre.
+KERNEL_NAME ?= proyecto5-grupo5
+
 .PHONY: sync check format run clean notebook
 
 # Format notebook source files without applying fixes.
@@ -27,9 +31,9 @@ format:
 # Apply Ruff fixes and format the notebook source files.
 check:
 	@echo "Checking and fixing notebooks..."
-	ruff check --fix $(PY_NOTEBOOKS)
+	ruff check --fix --ignore E402 $(PY_NOTEBOOKS)
 	ruff format $(PY_NOTEBOOKS)
-	@echo "Done."                           
+	@echo "Done."
 
 # Synchronize .py and .ipynb notebooks using Jupytext.
 sync:
@@ -40,8 +44,11 @@ sync:
 # Execute notebooks in place, preserving generated outputs.
 run:
 	@echo "Executing notebooks..."
-	jupyter nbconvert --execute $(IPYNB_NOTEBOOKS) --inplace
+	PYTHONPATH=$(CURDIR) uv run jupyter nbconvert --execute \
+		--ExecutePreprocessor.kernel_name=$(KERNEL_NAME) \
+		--inplace $(IPYNB_NOTEBOOKS)
 	@echo "Done."
+
 
 # Remove notebook metadata while keeping cell outputs.
 clean:

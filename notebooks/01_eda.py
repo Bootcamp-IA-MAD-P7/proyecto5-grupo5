@@ -6,6 +6,16 @@
 # ## 1. Configuration
 
 # %%
+
+import sys
+from pathlib import Path
+
+root = Path.cwd()
+if not (root / "src").exists():
+    root = root.parent
+
+sys.path.insert(0, str(root))
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
