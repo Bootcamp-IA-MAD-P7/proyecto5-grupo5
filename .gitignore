@@ -1,3 +1,7 @@
+#Notebooks / reports
+notebooks/*.ipynb
+/reports/*.html
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -14,7 +18,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -202,6 +206,10 @@ cython_debug/
 # .vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
+
+# Trained models (reproducible from notebooks)
+/models/*.pkl
+/models/*.joblib
 
 # Ruff stuff:
 .ruff_cache/

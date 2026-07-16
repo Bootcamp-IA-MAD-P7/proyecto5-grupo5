@@ -1,0 +1,67 @@
+import type { Translations } from './types'
+
+export const en: Translations = {
+  page: {
+    title: 'Customer Churn Predictor',
+    description: 'Fill in the customer data to predict churn probability.',
+  },
+  buttons: {
+    predict: 'Predict Churn',
+    predicting: 'Predicting...',
+    home: 'Home',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    langEs: 'ES',
+    langEn: 'EN',
+  },
+  groups: {
+    'personal-info': 'Personal Info',
+    'account-info': 'Account Info',
+    'services': 'Services',
+    'contract-billing': 'Contract & Billing',
+  },
+  fields: {
+    Gender: { label: 'Gender', options: { Male: 'Male', Female: 'Female' } },
+    'Senior Citizen': { label: 'Senior Citizen', options: { '0': 'No', '1': 'Yes' } },
+    Partner: { label: 'Partner', options: { No: 'No', Yes: 'Yes' } },
+    Dependents: { label: 'Dependents', options: { No: 'No', Yes: 'Yes' } },
+    'Tenure Months': { label: 'Tenure Months' },
+    'Phone Service': { label: 'Phone Service', options: { No: 'No', Yes: 'Yes' } },
+    'Multiple Lines': { label: 'Multiple Lines', options: { No: 'No', Yes: 'Yes' } },
+    'Internet Service': { label: 'Internet Service', options: { DSL: 'DSL', 'Fiber optic': 'Fiber optic', No: 'No' } },
+    'Online Security': { label: 'Online Security', options: { No: 'No', Yes: 'Yes' } },
+    'Online Backup': { label: 'Online Backup', options: { No: 'No', Yes: 'Yes' } },
+    'Device Protection': { label: 'Device Protection', options: { No: 'No', Yes: 'Yes' } },
+    'Tech Support': { label: 'Tech Support', options: { No: 'No', Yes: 'Yes' } },
+    'Streaming TV': { label: 'Streaming TV', options: { No: 'No', Yes: 'Yes' } },
+    'Streaming Movies': { label: 'Streaming Movies', options: { No: 'No', Yes: 'Yes' } },
+    Contract: { label: 'Contract', options: { 'Month-to-month': 'Month-to-month', 'One year': 'One year', 'Two year': 'Two year' } },
+    'Paperless Billing': { label: 'Paperless Billing', options: { No: 'No', Yes: 'Yes' } },
+    'Payment Method': {
+      label: 'Payment Method',
+      options: {
+        'Electronic check': 'Electronic check',
+        'Mailed check': 'Mailed check',
+        'Bank transfer (automatic)': 'Bank transfer (automatic)',
+        'Credit card (automatic)': 'Credit card (automatic)',
+      },
+    },
+    'Monthly Charges': { label: 'Monthly Charges' },
+    'Total Charges': { label: 'Total Charges' },
+  },
+  result: {
+    title: 'Prediction Result',
+    sentence: { start: 'The customer ', end: ' will churn' },
+    probability: 'Probability:',
+    risk: '',
+    riskLabels: {
+      low: 'Low risk',
+      medium: 'Medium risk',
+      high: 'High risk',
+    },
+    yes: 'yes',
+    no: 'no',
+  },
+  error: 'Error:',
+  placeholder: 'Select...',
+}
