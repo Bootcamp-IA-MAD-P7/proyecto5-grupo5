@@ -12,6 +12,8 @@
 import sys
 from src.training import make_train_test_split, evaluate_models, run_optuna_study
 
+
+
 from pathlib import Path
 
 root = Path.cwd()
@@ -32,6 +34,25 @@ from src.pipelines import build_logistic_pipeline
 from src.utils import save_pipeline
 
 sns.set_theme(style="whitegrid")
+
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+def build_pipeline_logreg(C=1.0, k_neighbors=5, random_state=42):
+    smote = SMOTE(k_neighbors=k_neighbors, random_state=random_state)
+
+    model = LogisticRegression(
+        C=C,
+        max_iter=2000,
+        random_state=random_state
+    )
+
+    return Pipeline([
+        ("smote", smote),
+        ("model", model),
+    ])
+
 
 # %%
 df = load_clean_data()
@@ -55,17 +76,8 @@ def suggest_lr_params(trial):
         "solver": solver_penalty[0],
         "penalty": solver_penalty[1],
         "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
+        "k_neighbors_smote": trial.suggest_int("k_neighbors_smote", 3, 10),
     }
-
-
-print("Starting Optuna hyperparameter optimization for Logistic Regression...")
-study_lr, lr_pipeline = run_optuna_study(
-    build_pipeline_fn=build_logistic_pipeline,
-    suggest_params_fn=suggest_lr_params,
-    X_train=X_train,
-    y_train=y_train,
-    n_trials=OPTUNA_TRIALS,
-)
 
 # %% [markdown]
 # ## 3. Evaluation

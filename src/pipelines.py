@@ -87,21 +87,23 @@ def _flatten_into_steps(transformer, prefix: str):
     return [(prefix, transformer)]
 
 
-def _build_model_pipeline_with_smote(model_step, random_state=RANDOM_STATE) -> ImbPipeline:
-    ft = create_feature_transformer()  # puede ser Pipeline o no
+def _build_model_pipeline_with_smote(model_step, random_state=RANDOM_STATE, k_neighbors_smote=5) -> ImbPipeline:
+    ft = create_feature_transformer()
     ft_steps = _flatten_into_steps(ft, prefix="features")
 
     steps = []
     steps.extend(ft_steps)
     steps.append(("binary", _make_binary_encoder()))
     steps.append(("transform", _build_all_transforms()))
-    steps.append(("smote", SMOTE(random_state=random_state, k_neighbors=5)))
+    steps.append(("smote", SMOTE(random_state=random_state, k_neighbors=k_neighbors_smote)))
     steps.append(("clf", model_step))
 
     return ImbPipeline(steps=steps)
 
 
 def build_logistic_pipeline(**kwargs) -> ImbPipeline:
+    k_neighbors_smote = kwargs.pop("k_neighbors_smote", 5)
+
     params = {
         "class_weight": None,
         "max_iter": 1000,
@@ -109,7 +111,13 @@ def build_logistic_pipeline(**kwargs) -> ImbPipeline:
         **kwargs,
     }
     model = LogisticRegression(**params)
-    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
+
+    return _build_model_pipeline_with_smote(
+        model,
+        random_state=RANDOM_STATE,
+        k_neighbors_smote=k_neighbors_smote
+    )
+
 
 
 def build_knn_pipeline(**kwargs) -> ImbPipeline:
@@ -119,6 +127,8 @@ def build_knn_pipeline(**kwargs) -> ImbPipeline:
 
 
 def build_random_forest_pipeline(**kwargs) -> ImbPipeline:
+    k_neighbors_smote = kwargs.pop("k_neighbors_smote", 5)
+
     params = {
         "class_weight": None,
         "random_state": RANDOM_STATE,
@@ -126,14 +136,28 @@ def build_random_forest_pipeline(**kwargs) -> ImbPipeline:
         **kwargs,
     }
     model = RandomForestClassifier(**params)
-    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
+
+    return _build_model_pipeline_with_smote(
+        model,
+        random_state=RANDOM_STATE,
+        k_neighbors_smote=k_neighbors_smote,
+    )
+
 
 
 def build_xgboost_pipeline(**kwargs) -> ImbPipeline:
+    k_neighbors_smote = kwargs.pop("k_neighbors_smote", 5)
+
     params = {
         "eval_metric": "logloss",
         "random_state": RANDOM_STATE,
         **kwargs,
     }
     model = XGBClassifier(**params)
-    return _build_model_pipeline_with_smote(model, random_state=RANDOM_STATE)
+
+    return _build_model_pipeline_with_smote(
+        model,
+        random_state=RANDOM_STATE,
+        k_neighbors_smote=k_neighbors_smote,
+    )
+

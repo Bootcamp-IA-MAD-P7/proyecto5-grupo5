@@ -30,6 +30,34 @@ from src.utils import save_pipeline, load_pipeline
 
 sns.set_theme(style="whitegrid")
 
+from imblearn.over_sampling import SMOTE
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+
+def build_pipeline_knn(
+    n_neighbors=15,
+    weights="distance",
+    k_neighbors_smote=5,
+    random_state=42,
+    sampling_strategy="auto"
+):
+    smote = SMOTE(
+        k_neighbors=k_neighbors_smote,
+        random_state=random_state,
+        sampling_strategy=sampling_strategy
+    )
+
+    model = KNeighborsClassifier(
+        n_neighbors=n_neighbors,
+        weights=weights
+    )
+
+    return Pipeline([
+        ("smote", smote),
+        ("model", model),
+    ])
+
+
 # %%
 df = load_clean_data()
 print(f"Loaded dataset: {df.shape}")
@@ -46,23 +74,10 @@ def suggest_knn_params(trial):
     return {
         "n_neighbors": trial.suggest_int("n_neighbors", 3, 50),
         "weights": trial.suggest_categorical("weights", ["uniform", "distance"]),
-        "algorithm": trial.suggest_categorical(
-            "algorithm", ["auto", "ball_tree", "kd_tree", "brute"]
-        ),
-        "metric": trial.suggest_categorical(
-            "metric", ["euclidean", "manhattan", "chebyshev"]
-        ),
+        "algorithm": trial.suggest_categorical("algorithm", ["auto", "ball_tree", "kd_tree", "brute"]),
+        "metric": trial.suggest_categorical("metric", ["euclidean", "manhattan", "chebyshev"]),
+        "k_neighbors_smote": trial.suggest_int("k_neighbors_smote", 3, 10),
     }
-
-
-print("Starting Optuna hyperparameter optimization for KNN...")
-study, knn_pipeline = run_optuna_study(
-    build_pipeline_fn=build_knn_pipeline,
-    suggest_params_fn=suggest_knn_params,
-    X_train=X_train,
-    y_train=y_train,
-    n_trials=OPTUNA_TRIALS,
-)
 
 # %% [markdown]
 # ## 3. Evaluate final KNN model
